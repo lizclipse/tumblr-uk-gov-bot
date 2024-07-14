@@ -54,6 +54,7 @@ class Config:
 
         self._client.edit_post(
             self._blog, self._config_post_id,
-            content=content
+            content=content,
+            tags=['config']
         )
         print('config saved')
