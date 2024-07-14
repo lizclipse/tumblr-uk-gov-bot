@@ -4,6 +4,7 @@ from pytumblr2 import TumblrRestClient
 from typing import Any
 
 from config import Config
+from format import strip_html
 from vote import VotePoster
 import vote
 import gov.bills
@@ -53,7 +54,9 @@ class CommonsVotePoster(VotePoster):
 
         return [vote.Div(
             id=div['DivisionId'],
+            title_prefix='On: ',
             title=div['Title'],
+            desc=None,
             yes=self._parse_members(div['Ayes']),
             yes_count=div['AyeCount'],
             no=self._parse_members(div['Noes']),
@@ -97,7 +100,9 @@ class LordsVotePoster(VotePoster):
 
         return [vote.Div(
             id=div['divisionId'],
+            title_prefix='On: ',
             title=div['title'],
+            desc=strip_html(div['amendmentMotionNotes']),
             yes=self._parse_members(div['contents']),
             yes_count=div['authoritativeContentCount'],
             no=self._parse_members(div['notContents']),

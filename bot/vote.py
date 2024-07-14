@@ -16,7 +16,9 @@ class Member(NamedTuple):
 
 class Div(NamedTuple):
     id: int
+    title_prefix: str
     title: str
+    desc: Optional[str]
     yes: list[Member]
     yes_count: int
     no: list[Member]
@@ -143,26 +145,31 @@ class Post:
             'subtype': 'heading1',
         })
 
-        NAME_SUFFIX = 'On: '
-        name = NAME_SUFFIX + self.div.title
+        title = self.div.title_prefix + self.div.title
 
         self.content.append({
             'type': 'text',
-            'text': name,
+            'text': title,
             'formatting': [
                 {
-                    'start': len(NAME_SUFFIX),
-                    'end': len(name),
+                    'start': len(self.div.title_prefix),
+                    'end': len(title),
                     'type': 'italic',
                 },
                 {
-                    'start': len(NAME_SUFFIX),
-                    'end': len(name),
+                    'start': len(self.div.title_prefix),
+                    'end': len(title),
                     'type': 'link',
                     'url': vote_url,
                 },
             ]
         })
+
+        if self.div.desc:
+            self.content.append({
+                'type': 'text',
+                'text': self.div.desc
+            })
 
     def tallies(self, members_total: int) -> None:
         vote_count_text = 'Ayes: {} '.format(self.div.yes_count)
