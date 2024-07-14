@@ -8,6 +8,7 @@ from vote import VotePoster
 import vote
 import gov.bills
 import gov.divisions.commons
+import gov.divisions.lords
 import gov.members
 
 
@@ -30,6 +31,8 @@ config = Config(client, blog, config_post_id)
 
 
 class CommonsVotePoster(VotePoster):
+    house = 'Commons'
+
     def __init__(self, blog: str, client: TumblrRestClient, config: Config):
         self.blog = blog
         self.client = client
@@ -63,10 +66,61 @@ class CommonsVotePoster(VotePoster):
     ) -> list[vote.Member]:
         return [vote.Member(
             name=member['Name'],
+            sortName=member['Name'],
             party=member['Party'],
             abbr=member['PartyAbbreviation'],
         ) for member in members]
 
+    def vote_url(self, id: int) -> str:
+        return 'https://votes.parliament.uk/votes/commons/division/' + str(id)
+
+
+class LordsVotePoster(VotePoster):
+    house = 'Lords'
+
+    def __init__(self, blog: str, client: TumblrRestClient, config: Config):
+        self.blog = blog
+        self.client = client
+        self.config = config
+        self.members_total = gov.members.total_members_lords()
+
+    @property
+    def last_id(self) -> int:
+        return self.config.last_lords_vote
+
+    @last_id.setter
+    def last_id(self, value: int) -> None:
+        self.config.last_lords_vote = value
+
+    def division_page(self, size: int, offset: int) -> list[vote.Div]:
+        page = gov.divisions.lords.search(take=size, skip=offset)
+
+        return [vote.Div(
+            id=div['divisionId'],
+            title=div['title'],
+            yes=self._parse_members(div['contents']),
+            yes_count=div['authoritativeContentCount'],
+            no=self._parse_members(div['notContents']),
+            no_count=div['authoritativeNotContentCount'],
+        ) for div in page]
+
+    def _parse_members(
+        self,
+        members: list[gov.divisions.lords.Member]
+    ) -> list[vote.Member]:
+        return [vote.Member(
+            name=member['listAs'],
+            sortName=member['listAs'],
+            party=member['party'],
+            abbr=member['partyAbbreviation'],
+        ) for member in members]
+
+    def vote_url(self, id: int) -> str:
+        return 'https://votes.parliament.uk/votes/lords/division/' + str(id)
+
 
 if __name__ == '__main__':
-    CommonsVotePoster(blog, client, config).post()
+    # CommonsVotePoster(blog, client, config).post()
+    # TODO: look into why some bills seem to be missing for the lords
+    # eg. 3124, 3127
+    LordsVotePoster(blog, client, config).post()

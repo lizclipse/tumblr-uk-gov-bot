@@ -9,6 +9,7 @@ import gov.members
 
 class Member(NamedTuple):
     name: str
+    sortName: str
     party: str
     abbr: str
 
@@ -29,7 +30,7 @@ class VoteTally(NamedTuple):
 
 class MemberVoteTally(NamedTuple):
     party: str
-    members: list[str]
+    members: list[Member]
 
 
 def find_bill_for(title: str) -> Optional[gov.bills.Bill]:
@@ -56,8 +57,12 @@ class VotePoster:
     client: TumblrRestClient
     last_id: int
     members_total: int
+    house: str
 
     def division_page(self, size: int, offset: int) -> list[Div]:
+        raise NotImplementedError()
+
+    def vote_url(self, id: int) -> str:
         raise NotImplementedError()
 
     def post(self) -> None:
@@ -68,7 +73,7 @@ class VotePoster:
             print('preparing content for division', div.id)
             post = Post(div)
 
-            post.header()
+            post.header(self.house, self.vote_url(div.id))
             post.tallies(self.members_total)
 
             short_bill = find_bill_for(div.title)
@@ -110,7 +115,7 @@ class VotePoster:
 
                 divs.append(div)
 
-            offset += len(divs)
+            offset = len(divs)
 
             if len(divs) > 100:
                 searching = False
@@ -131,10 +136,10 @@ class Post:
         self.div = div
         self.content: list[NpfContent] = []
 
-    def header(self) -> None:
+    def header(self, house: str, vote_url: str) -> None:
         self.content.append({
             'type': 'text',
-            'text': 'Commons Vote',
+            'text': '{} Vote'.format(house),
             'subtype': 'heading1',
         })
 
@@ -154,9 +159,7 @@ class Post:
                     'start': len(NAME_SUFFIX),
                     'end': len(name),
                     'type': 'link',
-                    'url':
-                    'https://votes.parliament.uk/votes/commons/division/' +
-                        str(self.div.id)
+                    'url': vote_url,
                 },
             ]
         })
@@ -313,6 +316,25 @@ class Post:
 
         return ', '.join(percents)
 
+    def _count_vote_groups(
+        self,
+        members: Iterable[Member],
+    ) -> list[MemberVoteTally]:
+        tally: dict[str, list[Member]] = {}
+
+        for member in members:
+            party_tally = tally.setdefault(member.party, [])
+            party_tally.append(member)
+
+        tally_list = [MemberVoteTally(party, members)
+                      for party, members in tally.items()]
+
+        for item in tally_list:
+            item.members.sort(key=lambda member: member.sortName)
+
+        tally_list.sort(key=lambda item: len(item.members), reverse=True)
+        return tally_list
+
     def _append_vote_groups(
         self,
         tally: Iterable[MemberVoteTally]
@@ -327,7 +349,7 @@ class Post:
                 'subtype': 'heading2',
             })
 
-            members_list = "\n".join(item.members)
+            members_list = "\n".join(map(lambda m: m.name, item.members))
             self.content.append({
                 'type': 'text',
                 'text': members_list,
@@ -337,22 +359,3 @@ class Post:
                         'type': 'small',
                 }]
             })
-
-    def _count_vote_groups(
-        self,
-        members: Iterable[Member],
-    ) -> list[MemberVoteTally]:
-        tally: dict[str, list[str]] = {}
-
-        for member in members:
-            party_tally = tally.setdefault(member.party, [])
-            party_tally.append(member.name)
-
-        tally_list = [MemberVoteTally(party, members)
-                      for party, members in tally.items()]
-
-        for item in tally_list:
-            item.members.sort()
-
-        tally_list.sort(key=lambda item: len(item.members), reverse=True)
-        return tally_list
