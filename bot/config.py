@@ -1,6 +1,8 @@
 from pytumblr2 import TumblrRestClient
 import yaml
 
+from tumblr_neue import NpfContent
+
 
 class Config:
     _last_commons_vote: int
@@ -26,7 +28,7 @@ class Config:
         return self._last_commons_vote
 
     @last_commons_vote.setter
-    def last_commons_vote(self, value):
+    def last_commons_vote(self, value: int) -> None:
         self._last_commons_vote = value
         self._save()
 
@@ -35,9 +37,23 @@ class Config:
         return self._last_lords_vote
 
     @last_lords_vote.setter
-    def last_lords_vote(self, value):
+    def last_lords_vote(self, value: int) -> None:
         self._last_lords_vote = value
         self._save()
 
-    def _save(self):
-        pass  # todo
+    def _save(self) -> None:
+        cfg = yaml.dump({
+            'last_commons_vote': self._last_commons_vote,
+            'last_lords_vote': self._last_lords_vote,
+        })
+
+        content: list[NpfContent] = [{
+            'type': 'text',
+            'text': cfg
+        }]
+
+        self._client.edit_post(
+            self._blog, self._config_post_id,
+            content=content
+        )
+        print('config saved')

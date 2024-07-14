@@ -1,4 +1,5 @@
 .env
 /target
 
+.ignore/
 __pycache__/

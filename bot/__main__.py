@@ -125,7 +125,9 @@ class LordsVotePoster(VotePoster):
 
 
 if __name__ == '__main__':
-    # CommonsVotePoster(blog, client, config).post()
+    print('====> Commons')
+    CommonsVotePoster(blog, client, config).post()
     # TODO: look into why some bills seem to be missing for the lords
     # eg. 3124, 3127
+    print('====> Lords')
     LordsVotePoster(blog, client, config).post()

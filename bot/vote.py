@@ -90,7 +90,11 @@ class VotePoster:
             self.client.create_post(
                 self.blog,
                 content=post.content,
-                tags=['test'],
+                tags=[
+                    'uk gov', 'uk politics', 'uk parliament',
+                    'politics', 'vote', 'wankerwatch',
+                    # 'backdating'
+                ],
                 layout=[{
                     'type': 'rows',
                     'display': [{'blocks': [i]}
@@ -100,7 +104,9 @@ class VotePoster:
             )
 
             print('\tdone!')
-            return
+            self.last_id = div.id
+
+        print('created', len(divs), 'posts')
 
     def load_unposted_divs(self) -> list[Div]:
         divs: list[Div] = []
