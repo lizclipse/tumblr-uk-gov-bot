@@ -1,0 +1,4 @@
+pytumblr2
+python-dotenv
+httpx[http2]
+pyyaml
