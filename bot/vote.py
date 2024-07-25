@@ -1,7 +1,7 @@
 from pytumblr2 import TumblrRestClient
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Union, Literal
 from collections.abc import Iterable
-import json
+from datetime import datetime
 
 from tumblr_neue import NpfContent
 import gov.bills
@@ -26,6 +26,7 @@ class Div(NamedTuple):
     yes_count: int
     no: list[Member]
     no_count: int
+    date: datetime
 
 
 class VoteTally(NamedTuple):
@@ -62,7 +63,7 @@ class VotePoster:
     client: TumblrRestClient
     last_id: int
     members_total: int
-    house: str
+    house: Union[Literal['Commons'], Literal['Lords']]
 
     def division_page(self, size: int, offset: int) -> list[Div]:
         raise NotImplementedError()
@@ -80,6 +81,9 @@ class VotePoster:
 
             post.header(self.house, self.vote_url(div.id))
             post.tallies(self.members_total)
+
+            if self.house == 'Commons':
+                post.commons_business()
 
             short_bill = find_bill_for(div.title)
             if short_bill:
@@ -103,7 +107,8 @@ class VotePoster:
                     'display': [{'blocks': [i]}
                         for i in range(len(post.content))],
                     'truncate_after': read_more_index,
-                }]
+                }],
+                # state='queued',
             )
 
             status = result['meta']['status'] if 'meta' in result else 200
@@ -238,6 +243,28 @@ class Post:
                 #     'end': vote_absent_small_end,
                 #     'type': 'small',
                 # },
+            ]
+        })
+
+    def commons_business(self) -> None:
+        date = f'{self.div.date.year}-{self.div.date.month}-{self.div.date.day}'
+
+        text = "Day's business papers: "
+
+        papers_link_start = len(text)
+        text += date
+        papers_link_end = len(text)
+
+        self.content.append({
+            'type': 'text',
+            'text': text,
+            'formatting': [
+                {
+                    'start': papers_link_start,
+                    'end': papers_link_end,
+                    'type': 'link',
+                    'url': 'https://commonsbusiness.parliament.uk/' + date
+                },
             ]
         })
 

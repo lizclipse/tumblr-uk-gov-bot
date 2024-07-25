@@ -2,6 +2,7 @@
 from dotenv import dotenv_values
 from pytumblr2 import TumblrRestClient
 from typing import Any
+from datetime import datetime
 
 from config import Config
 from format import strip_html
@@ -61,6 +62,7 @@ class CommonsVotePoster(VotePoster):
             yes_count=div['AyeCount'],
             no=self._parse_members(div['Noes']),
             no_count=div['NoCount'],
+            date=datetime.fromisoformat(div['Date']),
         ) for div in page]
 
     def _parse_members(
@@ -107,6 +109,7 @@ class LordsVotePoster(VotePoster):
             yes_count=div['authoritativeContentCount'],
             no=self._parse_members(div['notContents']),
             no_count=div['authoritativeNotContentCount'],
+            date=datetime.fromisoformat(div['date']),
         ) for div in page]
 
     def _parse_members(
