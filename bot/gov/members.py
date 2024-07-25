@@ -65,5 +65,6 @@ class MemberSearchParams(TypedDict):
 def search(**params: Unpack[MemberSearchParams]) -> MemberSearchResult:
     return httpx.get(
         BASE_URL + '/api/Members/Search',
-        params=cast(Any, params)
+        params=cast(Any, params),
+        timeout=30.0,
     ).raise_for_status().json()

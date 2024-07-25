@@ -56,11 +56,13 @@ BASE_URL = 'https://commonsvotes-api.parliament.uk'
 def search(**params: Unpack[DivisionSearchParams]) -> list[Division]:
     return httpx.get(
         BASE_URL + '/data/divisions.json/search',
-        params=cast(Any, params)
+        params=cast(Any, params),
+        timeout=30.0,
     ).raise_for_status().json()
 
 
 def get(id: int) -> Division:
     return httpx.get(
         BASE_URL + '/data/division/{}.json'.format(id),
+        timeout=30.0,
     ).raise_for_status().json()

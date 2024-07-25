@@ -1,10 +1,13 @@
 from pytumblr2 import TumblrRestClient
 from typing import Optional, NamedTuple
 from collections.abc import Iterable
+import json
 
 from tumblr_neue import NpfContent
 import gov.bills
 import gov.members
+
+TUMBLR_TEXT_BLOCK_LEN = 4096
 
 
 class Member(NamedTuple):
@@ -87,7 +90,7 @@ class VotePoster:
             read_more_index = post.indv_votes()
 
             print('\tcreating post for division')
-            self.client.create_post(
+            result = self.client.create_post(
                 self.blog,
                 content=post.content,
                 tags=[
@@ -102,6 +105,12 @@ class VotePoster:
                     'truncate_after': read_more_index,
                 }]
             )
+
+            status = result['meta']['status'] if 'meta' in result else 200
+            if status < 200 or status >= 300:
+                raise ConnectionError(
+                    'Post creation failed: ' + result['meta']['msg']
+                )
 
             print('\tdone!')
             self.last_id = div.id
@@ -362,13 +371,34 @@ class Post:
                 'subtype': 'heading2',
             })
 
-            members_list = "\n".join(map(lambda m: m.name, item.members))
-            self.content.append({
-                'type': 'text',
-                'text': members_list,
-                'formatting': [{
-                        'start': 0,
-                        'end': len(members_list),
-                        'type': 'small',
-                }]
-            })
+            NL = '\n'
+            NL_LEN = len(NL)
+            members_list = ''
+            blocks = []
+            for member in item.members:
+                final_len = len(members_list) + NL_LEN + len(member.name)
+                if final_len > TUMBLR_TEXT_BLOCK_LEN:
+                    if len(members_list) == 0:
+                        raise Exception(f'Member name too long: {member.name}')
+
+                    blocks.append(members_list)
+                    members_list = ''
+
+                if len(members_list) > 0:
+                    members_list += NL
+
+                members_list += member.name
+
+            if len(members_list) > 0:
+                blocks.append(members_list)
+
+            for members_list in blocks:
+                self.content.append({
+                    'type': 'text',
+                    'text': members_list,
+                    'formatting': [{
+                            'start': 0,
+                            'end': len(members_list),
+                            'type': 'small',
+                    }]
+                })

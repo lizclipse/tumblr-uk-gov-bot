@@ -1,4 +1,5 @@
 from pytumblr2 import TumblrRestClient
+from datetime import datetime
 import yaml
 
 from tumblr_neue import NpfContent
@@ -55,6 +56,11 @@ class Config:
         self._client.edit_post(
             self._blog, self._config_post_id,
             content=content,
-            tags=['config']
+            tags=[
+                'config',
+                "this post exists to store config data because it's easier than some local method",
+                f'updated: {datetime.utcnow().isoformat()}',
+                'non-wankerwatch',
+            ]
         )
         print('config saved')

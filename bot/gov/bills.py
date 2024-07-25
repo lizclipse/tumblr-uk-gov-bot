@@ -63,11 +63,13 @@ class BillsSearchParams(TypedDict):
 def search(**params: Unpack[BillsSearchParams]) -> BillsSearchResult:
     return httpx.get(
         BASE_URL + '/api/v1/Bills',
-        params=cast(Any, params)
+        params=cast(Any, params),
+        timeout=30.0,
     ).raise_for_status().json()
 
 
 def get(id: int) -> FullBill:
     return httpx.get(
         BASE_URL + '/api/v1/Bills/{}'.format(id),
+        timeout=30.0,
     ).raise_for_status().json()
