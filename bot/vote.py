@@ -286,8 +286,7 @@ class Post:
                     'end': len(bill_name),
                     'type': 'link',
                     'url':
-                    'https://bills.parliament.uk/bills/{}' +
-                        str(bill['billId'])
+                    'https://bills.parliament.uk/bills/' + str(bill['billId'])
                 },
             ]
         })
