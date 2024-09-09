@@ -247,7 +247,7 @@ class Post:
         })
 
     def commons_business(self) -> None:
-        date = f'{self.div.date.year}-{self.div.date.month}-{self.div.date.day}'
+        date = f'{self.div.date.year}-{self.div.date.month:02}-{self.div.date.day:02}'
 
         text = "Day's business papers: "
 
